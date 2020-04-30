@@ -72,7 +72,7 @@ class NDLSTM(nn.Module):
         masks = masks.expand(-1, -1, self.hidden_size)
 
         if initial is None:
-            initial = Variable(input.data.new(batch_size, self.hidden_size).zero_())
+            initial = torch.zeros(size=(batch_size, self.hidden_size), requires_grad=False)
             initial = (initial, initial)
 
 

@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 import sys, os
 
-sys.path.append('../snli')
+sys.path.append('..')
 
 
 # import models
@@ -10,8 +10,6 @@ class Configurable(object):
     def __init__(self, config_file, extra_args):
         config = ConfigParser()
         config.read(config_file)
-        print(config_file)
-        print(list(config.keys()))
         if extra_args:
             extra_args = dict([(k[2:], v) for k, v in zip(extra_args[0::2], extra_args[1::2])])
         for section in config.sections():
@@ -30,7 +28,7 @@ class Configurable(object):
 
     @property
     def pretrained_embeddings_file(self):
-        return self._config.get('Data', 'pretrained_embeddings_file')
+        return self._config.get('Data', 'pretrained_embeddings_file').replace("../", "")
 
     @property
     def elmo_weight_file(self):
@@ -46,15 +44,15 @@ class Configurable(object):
 
     @property
     def train_file(self):
-        return '../' + self._config.get('Data', 'train_file')
+        return self._config.get('Data', 'train_file')
 
     @property
     def dev_file(self):
-        return '../' + self._config.get('Data', 'dev_file')
+        return self._config.get('Data', 'dev_file')
 
     @property
     def test_file(self):
-        return '../' + self._config.get('Data', 'test_file')
+        return self._config.get('Data', 'test_file')
 
     @property
     def min_occur_count(self):

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import numpy as np
 
 def tensor_2_np(t):
@@ -40,7 +39,7 @@ def orthonormal_initializer(output_size, input_size):
 def drop_input_independent(word_embeddings, dropout_emb):
     batch_size, seq_length, _ = word_embeddings.size()
     word_masks = word_embeddings.data.new(batch_size, seq_length).fill_(1 - dropout_emb)
-    word_masks = Variable(torch.bernoulli(word_masks), requires_grad=False)
+    word_masks = torch.tensor(torch.bernoulli(word_masks), requires_grad=False, dtype=torch.float)
     scale = 1.0 / (1.0 * word_masks + 1e-12)
     word_masks *= scale
     word_masks = word_masks.unsqueeze(dim=2)
@@ -54,7 +53,7 @@ def drop_sequence_sharedmask(inputs, dropout, batch_first=True):
         inputs = inputs.transpose(0, 1)
     seq_length, batch_size, hidden_size = inputs.size()
     drop_masks = inputs.data.new(batch_size, hidden_size).fill_(1 - dropout)
-    drop_masks = Variable(torch.bernoulli(drop_masks), requires_grad=False)
+    drop_masks = torch.tensor(torch.bernoulli(drop_masks), requires_grad=False, dtype=torch.float)
     drop_masks = drop_masks / (1 - dropout)
     drop_masks = torch.unsqueeze(drop_masks, dim=2).expand(-1, -1, seq_length).permute(2, 0, 1)
     inputs = inputs * drop_masks
@@ -130,12 +129,12 @@ class Biaffine(nn.Module):
         batch_size, len1, dim1 = input1.size()
         batch_size, len2, dim2 = input2.size()
         if self.bias[0]:
-            ones = input1.data.new(batch_size, len1, 1).zero_().fill_(1)
-            input1 = torch.cat((input1, Variable(ones)), dim=2)
+            ones = torch.tensor(input1.data.new(batch_size, len1, 1).zero_().fill_(1))
+            input1 = torch.cat((input1, ones), dim=2)
             dim1 += 1
         if self.bias[1]:
-            ones = input2.data.new(batch_size, len2, 1).zero_().fill_(1)
-            input2 = torch.cat((input2, Variable(ones)), dim=2)
+            ones = torch.tensor(input2.data.new(batch_size, len2, 1).zero_().fill_(1))
+            input2 = torch.cat((input2, ones), dim=2)
             dim2 += 1
 
         affine = self.linear(input1)

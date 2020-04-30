@@ -1,18 +1,18 @@
 import torch
-from torch.autograd import Variable
 
 
 class TensorInstances:
     def __init__(self, batch_size, slen, tlen):
-        self.src_words = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
-        self.src_extwords = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
-        self.src_lens = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.src_masks = Variable(torch.Tensor(batch_size, slen).zero_(), requires_grad=False)
-        self.tgt_words = Variable(torch.LongTensor(batch_size, tlen).zero_(), requires_grad=False)
-        self.tgt_extwords = Variable(torch.LongTensor(batch_size, tlen).zero_(), requires_grad=False)
-        self.tgt_lens = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.tgt_masks = Variable(torch.Tensor(batch_size, tlen).zero_(), requires_grad=False)
-        self.tags = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
+        self.src_words = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
+
+        self.src_extwords = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
+        self.src_lens = torch.zeros(size=(batch_size, ), requires_grad=False, dtype=torch.long)
+        self.src_masks = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
+        self.tgt_words = torch.zeros(size=(batch_size, tlen), requires_grad=False, dtype=torch.long)
+        self.tgt_extwords = torch.zeros(size=(batch_size, tlen), requires_grad=False, dtype=torch.long)
+        self.tgt_lens = torch.zeros(size=(batch_size, ), requires_grad=False, dtype=torch.long)
+        self.tgt_masks = torch.zeros(size=(batch_size, tlen), requires_grad=False, dtype=torch.long)
+        self.tags = torch.zeros(size=(batch_size, ), requires_grad=False, dtype=torch.long)
 
     def to_cuda(self, device):
         self.src_words = self.src_words.cuda(device)

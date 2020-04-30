@@ -1,5 +1,9 @@
 import sys
-sys.path.extend(["../../","../","./"])
+# sys.path.extend(["../../","../","./"])
+import os
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 import time
 import torch.optim.lr_scheduler
 import torch.nn as nn
@@ -23,7 +27,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config):
     best_acc = 0
     best_step, optim_step = 0, 0
     batch_num = int(np.ceil(len(data) / float(config.train_batch_size)))
-    opti_file = "../" + config.save_model_path + ".opt"
+    opti_file = config.save_model_path + ".opt"
     for iter in range(config.train_iters):
         start_time = time.time()
         print('Iteration: ' + str(iter) + ', total batch num: ' + str(batch_num))
@@ -72,7 +76,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config):
                     best_acc = dev_tag_acc
                     bad_step = 0
                     best_step = global_step
-                    torch.save(bisent_classfier.model.state_dict(), '../' + config.save_model_path)
+                    torch.save(bisent_classfier.model.state_dict(), config.save_model_path)
                 else:
                     bad_step += 1
                     if bad_step == 1:
@@ -99,7 +103,7 @@ def evaluate(data, bisent_classfier, vocab, outputFile):
         if bisent_classfier.use_cuda:
             tinst.to_cuda(bisent_classfier.device)
         count = 0
-        # TODO
+        # TODO debug使用
         if tag_total > 0:
             break
         pred_tags = bisent_classfier.classifier(tinst.inputs)
@@ -165,7 +169,7 @@ if __name__ == '__main__':
     vocab = creatVocab(config.train_file, config.min_occur_count)
     vec1 = vocab.load_initialize_embs(config.pretrained_embeddings_file)
     vec2 = vocab.load_pretrained_embs(config.pretrained_embeddings_file)
-    pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
+    # pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
 
     config.use_cuda = False
     gpu_id = -1
