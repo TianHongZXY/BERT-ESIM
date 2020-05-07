@@ -3,22 +3,26 @@ from data.Instance import *
 from data.TensorInstances import *
 from collections import Counter
 import codecs
-
+import pysnooper
 def read_corpus(file):
+    '''读取语料，一条语料可能有多句，不同条语料之间有一个空行'''
     data = []
     with codecs.open(file, encoding='utf8') as input_file:
         curtext = []
         for line in input_file.readlines():
             line = line.strip()
-            if line is not None and line != '':
+            if line is not None and line != '': # 非空行都是一条数据
                 curtext.append(line)
             else:
-                slen = len(curtext)
+                slen = len(curtext) # 读到空行时 curtext包含 src tgt 和 label
                 if slen == 3:
                     cur_data = parseInstance(curtext)
                     if cur_data.src_len <= 500 and cur_data.tgt_len <=500:
                         data.append(cur_data)
                 curtext = []
+                # TODO debug使用
+                if(len(data)) >= 100:
+                    break
 
     slen = len(curtext)
     if slen == 3:
@@ -30,6 +34,7 @@ def read_corpus(file):
     return data
 
 def creatVocab(corpusFile, min_occur_count):
+    '''根据语料创建Vocab'''
     word_counter = Counter()
     tag_counter = Counter()
     alldatas = read_corpus(corpusFile)
@@ -47,6 +52,9 @@ def insts_numberize(insts, vocab):
         yield inst2id(inst, vocab)
 
 def inst2id(inst, vocab):
+    # 某单词可能包含在corpus里但不包含在预训练的embedding里，这时用正态分布的词向量 concat extembed的UNK
+    # 若被两个都包含了，那么concat的是同一个词向量，即extembed对应的词向量
+    # 因为建corpus的词表时使用的是语料，可能预训练的词向量没被完全包含进去，但dev和test文件有train中没有的词，刚好却在embed里包含了 就能用上
     src_ids = vocab.word2id(inst.src_forms)
     tgt_ids = vocab.word2id(inst.tgt_forms)
     src_extids = vocab.extword2id(inst.src_forms)
@@ -100,7 +108,7 @@ def batch_data_variable(batch, vocab):
         for index in range(cur_slen):
             tinst.src_words[b, index] = src_ids[index]
             tinst.src_extwords[b, index] = src_extids[index]
-            tinst.src_masks[b, index] = 1
+            tinst.src_masks[b, index] = 1 # mask的地方为0，非mask为1
         for index in range(cur_tlen):
             tinst.tgt_words[b, index] = tgt_ids[index]
             tinst.tgt_extwords[b, index] = tgt_extids[index]

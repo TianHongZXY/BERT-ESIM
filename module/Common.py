@@ -129,11 +129,11 @@ class Biaffine(nn.Module):
         batch_size, len1, dim1 = input1.size()
         batch_size, len2, dim2 = input2.size()
         if self.bias[0]:
-            ones = torch.tensor(input1.data.new(batch_size, len1, 1).zero_().fill_(1))
+            ones = torch.ones(size=(batch_size, len1, 1), dtype=input1.dtype, device=input1.device)
             input1 = torch.cat((input1, ones), dim=2)
             dim1 += 1
         if self.bias[1]:
-            ones = torch.tensor(input2.data.new(batch_size, len2, 1).zero_().fill_(1))
+            ones = torch.ones(size=(batch_size, len2, 1), dtype=input2.dtype, device=input2.device)
             input2 = torch.cat((input2, ones), dim=2)
             dim2 += 1
 

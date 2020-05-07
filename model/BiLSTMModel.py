@@ -68,6 +68,7 @@ class BiLSTMModel(nn.Module):
 
         src_diff_hiddens = src_hiddens - src_hiddens_att
         src_prod_hiddens = src_hiddens * src_hiddens_att
+        # [batch_size, src_len, 2 * lstm_hiddens * 4] 乘2是双向
         src_summary_hiddens = torch.cat([src_hiddens, src_hiddens_att, src_diff_hiddens, \
                                          src_prod_hiddens], dim=-1)
 
@@ -81,22 +82,22 @@ class BiLSTMModel(nn.Module):
 
         src_hiddens_proj = self.rnn_dropout(src_hiddens_proj)
         tgt_hiddens_proj = self.rnn_dropout(tgt_hiddens_proj)
-
+        # [batch_size, src_len, 2 * lstm_hiddens]
         src_final_hiddens = self.lstm_dec(src_hiddens_proj, src_lens)
         tgt_final_hiddens = self.lstm_dec(tgt_hiddens_proj, tgt_lens)
-
+        # 用一个vector表示src，先盖掉mask的state，再在length维度上求和，最后除以非mask个数，得到avgpool
         src_hidden_avg = torch.sum(src_final_hiddens * src_masks.unsqueeze(1)
                                                 .transpose(2, 1), dim=1)\
             / (torch.sum(src_masks, dim=1, keepdim=True) + 1e-7)
         tgt_hidden_avg = torch.sum(tgt_final_hiddens * tgt_masks.unsqueeze(1)
                                                   .transpose(2, 1), dim=1)\
             / (torch.sum(tgt_masks, dim=1, keepdim=True) + 1e-7)
-
+        # maxpool
         src_hidden_max, _ = replace_masked(src_final_hiddens, src_masks, -1e7).max(dim=1)
         tgt_hidden_max, _ = replace_masked(tgt_final_hiddens, tgt_masks, -1e7).max(dim=1)
-
+        # [batch_size, 2 * lstm_hiddens * 4]
         hiddens = torch.cat([src_hidden_avg, src_hidden_max, tgt_hidden_avg, tgt_hidden_max], dim=1)
-
+        # [batch_size, tag_size]
         outputs = self.proj(hiddens)
         return outputs
 

@@ -1,4 +1,5 @@
 import numpy as np
+import pysnooper
 class Vocab(object):
     ##please always set PAD to zero, otherwise will cause a bug in pad filling (Tensor)
     PAD, START, END, UNK = 0, 1, 2, 3
@@ -26,6 +27,8 @@ class Vocab(object):
         print("Vocab info: #words %d, #tags %d" % (self.vocab_size, self.tag_size))
 
     def load_initialize_embs(self, embfile):
+        '''构建并返回word2id对应的embedding，包含在预训练embfile中的单词使用训练好的词向量初始化
+           其余使用标准高斯分布随机生成，且每个单词的词向量方差都为1'''
         embeddings = {}
         with open(embfile, "r", encoding="utf8") as input_data:
             for line in input_data:
@@ -62,6 +65,7 @@ class Vocab(object):
                 # Out of vocabulary words are initialised with random gaussian
                 # samples.
                 embedding_matrix[i] = np.random.normal(size=(embedding_dim))
+            # 除标准差，方差归一，之前我看一般是除以根号下dim，不过一个维度为dim且服从正态分布的vector的std本就是根号下dim，这里是百分百确保了方差等于1
             embedding_matrix[i] = embedding_matrix[i] / np.std(embedding_matrix[i])
         hit_count = num_words - missed
         print("Captured words: %d, total words: %d, ratio: %.f" %(hit_count, num_words, \
@@ -70,6 +74,7 @@ class Vocab(object):
         return embedding_matrix
 
     def load_pretrained_embs(self, embfile):
+        '''加载并返回预训练的词向量，词表规模和词向量维度都由预训练文件决定'''
         embedding_dim = -1
         self._id2extword = []
         allwords = set()
@@ -110,7 +115,8 @@ class Vocab(object):
                     vector = np.array(values[1:], dtype='float64')
                     vector = vector / np.std(vector)
                     embeddings[index] = vector
-                    embeddings[self.UNK] += vector
+                    embeddings[self.UNK] += vector # 求全词表的词向量之和的平均可以用左乘一个全(1/dim)的行向量加速
+        # 拿全词表向量平均做UNK的初始化词向量
         embeddings[self.UNK] = embeddings[self.UNK] / word_num
         return embeddings
 

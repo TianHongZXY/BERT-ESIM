@@ -7,6 +7,7 @@ from module.Utils import sort_by_seq_lens, masked_softmax, weighted_sum
 # https://github.com/allenai/allennlp/blob/master/allennlp/modules/input_variational_dropout.py
 class RNNDropout(nn.Dropout):
     """
+    这个Dropout对一个batch里的不同sequence做的是相同的mask，为什么要这么做呢
     Dropout layer for the inputs of RNNs.
     Apply the same dropout mask to all the elements of the same sequence in
     a batch of sequences of size (batch, sequences_length, embedding_dim).
@@ -26,6 +27,7 @@ class RNNDropout(nn.Dropout):
                                              sequences_batch.shape[-1])
         dropout_mask = nn.functional.dropout(ones, self.p, self.training,
                                              inplace=False)
+        # broadcasting，同一个mask给同一个batch所有sequence共用
         return dropout_mask.unsqueeze(1) * sequences_batch
 
 
@@ -109,6 +111,7 @@ class Seq2SeqEncoder(nn.Module):
         outputs, _ = self._encoder(packed_batch, None)
         outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs,
                                                       batch_first=True)
+        # 恢复是为了要和tag的顺序一致
         reordered_outputs = outputs.index_select(0, restoration_idx)
 
         return reordered_outputs
@@ -151,20 +154,25 @@ class SoftmaxAttention(nn.Module):
         """
         # Dot product between premises and hypotheses in each sequence of
         # the batch.
+        # [batch_size, src_len, tgt_len]
         similarity_matrix = premise_batch.bmm(hypothesis_batch.transpose(2, 1)
                                                               .contiguous())
 
         # Softmax attention weights.
+        # hyp_mask shape = [batch_size, tgt_len]
         prem_hyp_attn = masked_softmax(similarity_matrix, hypothesis_mask)
+        # prem_mask shape = [batch_size, src_len]
         hyp_prem_attn = masked_softmax(similarity_matrix.transpose(1, 2)
                                                         .contiguous(),
                                        premise_mask)
 
         # Weighted sums of the hypotheses for the the premises attention,
         # and vice-versa for the attention of the hypotheses.
+        # [batch_size, src_len, hidden_size]
         attended_premises = weighted_sum(hypothesis_batch,
                                          prem_hyp_attn,
                                          premise_mask)
+        # [batch_size, tgt_len, hidden_size]
         attended_hypotheses = weighted_sum(premise_batch,
                                            hyp_prem_attn,
                                            hypothesis_mask)

@@ -61,9 +61,9 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config):
                 bisent_classfier.model.zero_grad()       
                 global_step += 1
 
-            # if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
-            if batch_iter % 2 == 0 or batch_iter == batch_num:
-
+            if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
+            # if batch_iter % 2 == 0 or batch_iter == batch_num: # debug使用
+            # TODO 5.2看到这
                 tag_correct, tag_total, dev_tag_acc = \
                     evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step))
                 print("Dev: acc = %d/%d = %.2f, lr = %.8f" % (tag_correct, tag_total, dev_tag_acc, optimizer.lr))

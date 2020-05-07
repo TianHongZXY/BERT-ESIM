@@ -77,17 +77,17 @@ def masked_softmax(tensor, mask):
         A tensor of the same size as the inputs containing the result of the
         softmax.
     """
-    tensor_shape = tensor.size()
-    reshaped_tensor = tensor.view(-1, tensor_shape[-1])
+    tensor_shape = tensor.size() # [batch_size, query_len, key_len]
+    reshaped_tensor = tensor.view(-1, tensor_shape[-1]) # [batch_size, q * k]
 
     # Reshape the mask so it matches the size of the input tensor.
     while mask.dim() < tensor.dim():
-        mask = mask.unsqueeze(1)
-    mask = mask.expand_as(tensor).contiguous().float()
-    reshaped_mask = mask.view(-1, mask.size()[-1])
+        mask = mask.unsqueeze(1) # [batch_size, 1, key_len]
+    mask = mask.expand_as(tensor).contiguous().float() # [batch_size, query_len, key_len]
+    reshaped_mask = mask.view(-1, mask.size()[-1])# [batch_size, q * k]
 
     result = nn.functional.softmax(reshaped_tensor * reshaped_mask, dim=-1)
-    result = result * reshaped_mask
+    result = result * reshaped_mask # 何必这么做呢，可以在上面一步把reshaped_mask为0的地方都变成1e-13这种
     # 1e-13 is added to avoid divisions by zero.
     result = result / (result.sum(dim=-1, keepdim=True) + 1e-13)
 

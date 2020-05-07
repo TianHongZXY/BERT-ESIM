@@ -1,2 +1,6 @@
-*.pyc
-/__pycache__
+*.cpython-36.pyc
+*/__pycache__
+.idea/
+snli
+embedding
+venv_esim

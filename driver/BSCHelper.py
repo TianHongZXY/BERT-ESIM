@@ -33,6 +33,7 @@ class BiSententClassifier(object):
 
     def compute_accuracy(self, true_tags):
         b, l = self.tag_logits.size()
+        #TODO 这个[1]是干嘛的
         pred_tags = self.tag_logits.detach().max(1)[1].cpu()
         true_tags = true_tags.detach().cpu()
         tag_correct = pred_tags.eq(true_tags).cpu().sum()
