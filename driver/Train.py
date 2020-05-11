@@ -16,8 +16,10 @@ from allennlp.commands.elmo import ElmoEmbedder
 from driver.BSCHelper import *
 from data.Dataloader import *
 import pickle
+from BertTokenHelper import BertTokenHelper
 
-def train(data, dev_data, test_data, bisent_classfier, vocab, config):
+
+def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer):
     optimizer = Optimizer(filter(lambda p: p.requires_grad, bisent_classfier.model.parameters()), config)
 
     decay, max_patience = config.decay, config.decay_steps
@@ -35,7 +37,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config):
 
         correct_num, total_num = 0, 0
         for onebatch in data_iter(data, config.train_batch_size, True):
-            tinst = batch_data_variable(onebatch, vocab)
+            tinst = batch_data_variable(onebatch, vocab, tokenizer)
             bisent_classfier.model.train()
             if bisent_classfier.use_cuda:
                 tinst.to_cuda(bisent_classfier.device)
@@ -61,7 +63,9 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config):
                 bisent_classfier.model.zero_grad()       
                 global_step += 1
 
-            if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
+            # if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
+            # TODO debug跳过eval
+            if False:
             # if batch_iter % 2 == 0 or batch_iter == batch_num: # debug使用
             # TODO 5.2看到这
                 tag_correct, tag_total, dev_tag_acc = \
@@ -104,8 +108,8 @@ def evaluate(data, bisent_classfier, vocab, outputFile):
             tinst.to_cuda(bisent_classfier.device)
         count = 0
         # TODO debug使用
-        if tag_total > 0:
-            break
+        # if tag_total > 0:
+        #     break
         pred_tags = bisent_classfier.classifier(tinst.inputs)
         for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab):
             printInstance(output, inst)
@@ -166,9 +170,10 @@ if __name__ == '__main__':
     args, extra_args = argparser.parse_known_args()
     config = Configurable(args.config_file, extra_args)
     torch.set_num_threads(args.thread)
-    vocab = creatVocab(config.train_file, config.min_occur_count)
-    vec1 = vocab.load_initialize_embs(config.pretrained_embeddings_file)
-    vec2 = vocab.load_pretrained_embs(config.pretrained_embeddings_file)
+    tokenizer = BertTokenHelper(bert_vocab_file='bert-base-uncased-vocab.txt')
+    vocab = creatVocab(config.train_file, config.min_occur_count, tokenizer)
+    # vec1 = vocab.load_initialize_embs(config.pretrained_embeddings_file)
+    # vec2 = vocab.load_pretrained_embs(config.pretrained_embeddings_file)
     # pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
 
     config.use_cuda = False
@@ -181,15 +186,14 @@ if __name__ == '__main__':
     print("\nGPU using status: ", config.use_cuda)
 
 
-    model = BiLSTMModel(vocab, config, vec1)
-    extword_embed = ExtWord(vocab, config, vec2)
+    model = BiLSTMModel(vocab, config)#, vec1)
+    # extword_embed = ExtWord(vocab, config, vec2)
     if config.use_cuda:
         torch.backends.cudnn.enabled = False
         model = model.cuda(args.gpu)
-        extword_embed = extword_embed.cuda(args.gpu)
-
-    classifier = BiSententClassifier(model, extword_embed, vocab)
-    data = read_corpus(config.train_file)
-    dev_data = read_corpus(config.dev_file)
-    test_data = read_corpus(config.test_file)
-    train(data, dev_data, test_data, classifier, vocab, config)
+        # extword_embed = extword_embed.cuda(args.gpu)
+    classifier = BiSententClassifier(model, vocab)
+    data = read_corpus(config.train_file, tokenizer)
+    dev_data = None#read_corpus(config.dev_file, tokenizer)
+    test_data = None#read_corpus(config.test_file, tokenizer)
+    train(data, dev_data, test_data, classifier, vocab, config, tokenizer)

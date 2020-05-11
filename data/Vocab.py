@@ -1,5 +1,5 @@
 import numpy as np
-import pysnooper
+
 class Vocab(object):
     ##please always set PAD to zero, otherwise will cause a bug in pad filling (Tensor)
     PAD, START, END, UNK = 0, 1, 2, 3
@@ -7,24 +7,24 @@ class Vocab(object):
         self._id2word = ['<pad>', '<bos>', '<eos>', '<unk>']
         self._wordid2freq = [10000, 10000, 10000, 10000]
         self._id2tag = []
-        for word, count in word_counter.most_common():
-            if count <= min_occur_count: continue
-            self._id2word.append(word)
-            self._wordid2freq.append(count)
+        # for word, count in word_counter.most_common():
+        #     if count <= min_occur_count: continue
+        #     self._id2word.append(word)
+        #     self._wordid2freq.append(count)
 
         for tag, count in tag_counter.most_common():
             self._id2tag.append(tag)
 
         reverse = lambda x: dict(zip(x, range(len(x))))
-        self._word2id = reverse(self._id2word)
-        if len(self._word2id) != len(self._id2word):
-            print("serious bug: words dumplicated, please check!")
+        # self._word2id = reverse(self._id2word)
+        # if len(self._word2id) != len(self._id2word):
+        #     print("serious bug: words dumplicated, please check!")
 
         self._tag2id = reverse(self._id2tag)
         if len(self._tag2id) != len(self._id2tag):
             print("serious bug: POS tags dumplicated, please check!")
 
-        print("Vocab info: #words %d, #tags %d" % (self.vocab_size, self.tag_size))
+        # print("Vocab info: #words %d, #tags %d" % (self.vocab_size, self.tag_size))
 
     def load_initialize_embs(self, embfile):
         '''构建并返回word2id对应的embedding，包含在预训练embfile中的单词使用训练好的词向量初始化
