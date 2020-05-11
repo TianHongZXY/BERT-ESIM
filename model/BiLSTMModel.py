@@ -1,17 +1,25 @@
 from module.ESIM import *
 from module.Utils import *
 from module.CPUEmbedding import *
+from transformers import BertModel
 
 class BiLSTMModel(nn.Module):
-    def __init__(self, vocab, config, init_embedding):
+    def __init__(self, vocab, config):
         super(BiLSTMModel, self).__init__()
         self.config = config
-        initvocab_size, initword_dims = init_embedding.shape
-        self.word_dims = initword_dims
-        if config.word_dims != initword_dims or vocab.vocab_size != initvocab_size:
-            print("prev embedding shape size does not match, check config file")
-        self.word_embed = nn.Embedding(vocab.vocab_size, self.word_dims, padding_idx=vocab.PAD)
-        self.word_embed.weight.data.copy_(torch.from_numpy(init_embedding))
+        # initvocab_size, initword_dims = init_embedding.shape
+        # self.word_dims = initword_dims
+        self.word_dims = 768 // 2
+        # if config.word_dims != initword_dims or vocab.vocab_size != initvocab_size:
+        #     print("prev embedding shape size does not match, check config file")
+
+        pretrained_weights = '/Users/tianhongzxy/.cache/torch/transformers/bert-base-uncased'
+        self.bert = BertModel.from_pretrained(pretrained_weights,
+                                          # output_hidden_states=True,
+                                          # output_attentions=True)
+                                         )
+        # self.word_embed = nn.Embedding(vocab.vocab_size, self.word_dims, padding_idx=vocab.PAD)
+        # self.word_embed.weight.data.copy_(torch.from_numpy(init_embedding))
 
         self.rnn_dropout = RNNDropout(p=config.dropout_mlp)
 
@@ -44,18 +52,31 @@ class BiLSTMModel(nn.Module):
 
         self.apply(_init_esim_weights)
 
-
+    import torchsnooper
+    # @torchsnooper.snoop()
     def forward(self, tinputs):
         ##unpack inputs
-        src_words, src_extwords_embed, src_lens, src_masks, \
-        tgt_words, tgt_extwords_embed, tgt_lens, tgt_masks = tinputs
+        # src_words, src_extwords_embed, src_lens, src_masks, \
+        # tgt_words, tgt_extwords_embed, tgt_lens, tgt_masks = tinputs
+        src_bert_indice, src_segments_id, src_piece_id, src_lens, src_masks, \
+        tgt_bert_indice, tgt_segments_id, tgt_piece_id, tgt_lens, tgt_masks = tinputs
 
-        src_dyn_embed = self.word_embed(src_words)
-        tgt_dyn_embed = self.word_embed(tgt_words)
+        # src_dyn_embed = self.word_embed(src_words)
+        # tgt_dyn_embed = self.word_embed(tgt_words)
 
-        src_embed = torch.cat([src_dyn_embed, src_extwords_embed], dim=-1)
-        tgt_embed = torch.cat([tgt_dyn_embed, tgt_extwords_embed], dim=-1)
+        # src_embed = torch.cat([src_dyn_embed, src_extwords_embed], dim=-1)
+        # tgt_embed = torch.cat([tgt_dyn_embed, tgt_extwords_embed], dim=-1)
 
+        src_embed, src_attn = self.bert(input_ids=src_bert_indice,
+                        attention_mask=src_masks,
+                        token_type_ids=src_segments_id,
+                        # position_ids=src_piece_id,
+                        )
+        tgt_embed, tgt_attn = self.bert(input_ids=tgt_bert_indice,
+                        attention_mask=tgt_masks,
+                        token_type_ids=tgt_segments_id,
+                        # position_ids=tgt_piece_id,
+                        )
         src_embed = self.rnn_dropout(src_embed)
         tgt_embed = self.rnn_dropout(tgt_embed)
 
