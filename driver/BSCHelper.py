@@ -5,8 +5,6 @@ import torch.nn as nn
 class BiSententClassifier(object):
     def __init__(self, model, vocab):
         self.model = model
-        # self.vocab = vocab
-        # self.extword_embed = extword_embed
         p = next(filter(lambda p: p.requires_grad, model.parameters()))
         self.use_cuda = p.is_cuda
         self.device = p.get_device() if self.use_cuda else None
@@ -14,15 +12,6 @@ class BiSententClassifier(object):
 
 
     def forward(self, tinputs):
-        # src_words, src_extwords, src_lens, src_masks, \
-        # tgt_words, tgt_extwords, tgt_lens, tgt_masks = tinputs
-
-        # src_ext_embs = self.extword_embed(src_extwords)
-        # tgt_ext_embs = self.extword_embed(tgt_extwords)
-
-        # new_inputs = (src_words, src_ext_embs, src_lens, src_masks, \
-        #               tgt_words, tgt_ext_embs, tgt_lens, tgt_masks)
-
         tag_logits = self.model(tinputs)
         # cache
         self.tag_logits = tag_logits

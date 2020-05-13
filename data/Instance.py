@@ -15,18 +15,6 @@ class Instance:
         output = ' '.join(self.src_words) + '\n' + ' '.join(self.tgt_words) + '\n' + self.tag + '\n'
         return output
 
-    # @property
-    # def src_len(self):
-    #     l, _, __ = self.tokenizer.bert_ids(" ".join(self.src_words))
-    #     # return len(self.src_words)
-    #     return len(l)
-    #
-    # @property
-    # def tgt_len(self):
-    #     l, _, __ = self.tokenizer.bert_ids(" ".join(self.tgt_words))
-    #     return len(l)
-    #     # return len(self.tgt_words)
-
 
 def parseInstance(texts, tokenizer):
     if len(texts) != 3: return None

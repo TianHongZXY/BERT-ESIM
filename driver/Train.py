@@ -172,9 +172,6 @@ if __name__ == '__main__':
     torch.set_num_threads(args.thread)
     tokenizer = BertTokenHelper(bert_vocab_file='bert-base-uncased-vocab.txt')
     vocab = creatVocab(config.train_file, config.min_occur_count, tokenizer)
-    # vec1 = vocab.load_initialize_embs(config.pretrained_embeddings_file)
-    # vec2 = vocab.load_pretrained_embs(config.pretrained_embeddings_file)
-    # pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
 
     config.use_cuda = False
     gpu_id = -1
@@ -186,12 +183,10 @@ if __name__ == '__main__':
     print("\nGPU using status: ", config.use_cuda)
 
 
-    model = BiLSTMModel(vocab, config)#, vec1)
-    # extword_embed = ExtWord(vocab, config, vec2)
+    model = BiLSTMModel(vocab, config)
     if config.use_cuda:
         torch.backends.cudnn.enabled = False
         model = model.cuda(args.gpu)
-        # extword_embed = extword_embed.cuda(args.gpu)
     classifier = BiSententClassifier(model, vocab)
     data = read_corpus(config.train_file, tokenizer)
     dev_data = None#read_corpus(config.dev_file, tokenizer)

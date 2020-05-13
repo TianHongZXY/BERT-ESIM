@@ -3,10 +3,6 @@ import torch
 
 class TensorInstances:
     def __init__(self, batch_size, slen, tlen):
-        # self.src_words = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
-        # self.src_extwords = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
-        # self.tgt_words = torch.zeros(size=(batch_size, tlen), requires_grad=False, dtype=torch.long)
-        # self.tgt_extwords = torch.zeros(size=(batch_size, tlen), requires_grad=False, dtype=torch.long)
         self.tags = torch.zeros(size=(batch_size, ), requires_grad=False, dtype=torch.long)
 
         self.src_masks = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
@@ -22,12 +18,8 @@ class TensorInstances:
         self.tgt_piece_id = torch.arange(start=0, end=tlen, requires_grad=False, dtype=torch.long)
 
     def to_cuda(self, device):
-        # self.src_words = self.src_words.cuda(device)
-        # self.src_extwords = self.src_extwords.cuda(device)
         self.src_lens = self.src_lens.cuda(device)
         self.src_masks = self.src_masks.cuda(device)
-        # self.tgt_words = self.tgt_words.cuda(device)
-        # self.tgt_extwords = self.tgt_extwords.cuda(device)
         self.tgt_lens = self.tgt_lens.cuda(device)
         self.tgt_masks = self.tgt_masks.cuda(device)
         self.tags = self.tags.cuda(device)
@@ -42,8 +34,6 @@ class TensorInstances:
 
     @property
     def inputs(self):
-        # return (self.src_words, self.src_extwords, self.src_lens, self.src_masks,
-        #         self.tgt_words, self.tgt_extwords, self.tgt_lens, self.tgt_masks)
         return (self.src_bert_indice, self.src_segments_id, self.src_piece_id, self.src_lens, self.src_masks,\
                 self.tgt_bert_indice, self.tgt_segments_id, self.tgt_piece_id, self.tgt_lens, self.tgt_masks)
     @property
