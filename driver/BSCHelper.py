@@ -1,5 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
+from transformers import BertModel
 
 
 class BiSententClassifier(object):
@@ -9,10 +10,29 @@ class BiSententClassifier(object):
         self.use_cuda = p.is_cuda
         self.device = p.get_device() if self.use_cuda else None
         self.criterion = nn.CrossEntropyLoss()
-
+        pretrained_weights = '/Users/tianhongzxy/.cache/torch/transformers/bert-base-uncased'
+        self.bert = BertModel.from_pretrained(pretrained_weights,
+                                          # output_hidden_states=True,
+                                          # output_attentions=True)
+                                         )
+        for p in self.bert.named_parameters():
+            p[1].requires_grad = False
 
     def forward(self, tinputs):
-        tag_logits = self.model(tinputs)
+        src_bert_indice, src_segments_id, src_piece_id, src_lens, src_masks, \
+        tgt_bert_indice, tgt_segments_id, tgt_piece_id, tgt_lens, tgt_masks = tinputs
+
+        src_embed, src_attn = self.bert(input_ids=src_bert_indice,
+                        attention_mask=src_masks,
+                        token_type_ids=src_segments_id,
+                        # position_ids=src_piece_id,
+                        )
+        tgt_embed, tgt_attn = self.bert(input_ids=tgt_bert_indice,
+                        attention_mask=tgt_masks,
+                        token_type_ids=tgt_segments_id,
+                        # position_ids=tgt_piece_id,
+                        )
+        tag_logits = self.model(src_embed, tgt_embed, src_lens, tgt_lens, src_masks, tgt_masks)
         # cache
         self.tag_logits = tag_logits
 

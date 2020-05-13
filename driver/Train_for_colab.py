@@ -30,7 +30,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
     best_acc = 0
     best_step, optim_step = 0, 0
     batch_num = int(np.ceil(len(data) / float(config.train_batch_size)))
-    opti_file = config.save_model_path + ".opt"
+    opti_file = 'content/drive/My Drive/snli/model/model' + ".opt"
     for iter in range(config.train_iters):
         start_time = time.time()
         print('Iteration: ' + str(iter) + ', total batch num: ' + str(batch_num))
@@ -53,8 +53,9 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
             total_num += cur_count
             acc = correct_num * 100.0 / total_num
             during_time = float(time.time() - start_time)
-            print("Step:%d, ACC:%.2f, Iter:%d, batch:%d, time:%.2f, loss:%.2f" \
-                %(global_step, acc, iter, batch_iter, during_time, loss_value))
+            if global_step % 100 == 0:
+                print("Step:%d, ACC:%.2f, Iter:%d, batch:%d, time:%.2f, loss:%.2f" \
+                    %(global_step, acc, iter, batch_iter, during_time, loss_value))
 
             batch_iter += 1
             if batch_iter % config.update_every == 0 or batch_iter == batch_num:
@@ -66,22 +67,22 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
 
             # if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
             # TODO debug跳过eval
-            if False:
+            if True:
             # if batch_iter % 2 == 0 or batch_iter == batch_num: # debug使用
             # TODO 5.2看到这
                 tag_correct, tag_total, dev_tag_acc = \
-                    evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step))
+                    evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step), tokenizer)
                 print("Dev: acc = %d/%d = %.2f, lr = %.8f" % (tag_correct, tag_total, dev_tag_acc, optimizer.lr))
 
                 tag_correct, tag_total, test_tag_acc = \
-                     evaluate(test_data, classifier, vocab, config.test_file + '.' + str(global_step))
+                     evaluate(test_data, classifier, vocab, config.test_file + '.' + str(global_step), tokenizer)
                 print("Test: acc = %d/%d = %.2f" % (tag_correct, tag_total, test_tag_acc))
                 if dev_tag_acc > best_acc:
                     print("Exceed best acc: history = %.2f, current = %.2f" %(best_acc, dev_tag_acc))
                     best_acc = dev_tag_acc
                     bad_step = 0
                     best_step = global_step
-                    torch.save(bisent_classfier.model.state_dict(), config.save_model_path)
+                    torch.save(bisent_classfier.model.state_dict(), 'content/drive/My Drive/snli/model/model')
                 else:
                     bad_step += 1
                     if bad_step == 1:
@@ -97,14 +98,14 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                         print("Loading best model at step: %d, optim step at %d." % (best_step, optim_step))
 
 
-def evaluate(data, bisent_classfier, vocab, outputFile):
+def evaluate(data, bisent_classfier, vocab, outputFile, tokenizer):
     start = time.time()
     bisent_classfier.model.eval()
     output = open(outputFile, 'w', encoding='utf-8')
     tag_correct, tag_total = 0, 0
 
     for onebatch in data_iter(data, config.test_batch_size, False):
-        tinst = batch_data_variable(onebatch, vocab)
+        tinst = batch_data_variable(onebatch, vocab, tokenizer)
         if bisent_classfier.use_cuda:
             tinst.to_cuda(bisent_classfier.device)
         count = 0
@@ -112,7 +113,7 @@ def evaluate(data, bisent_classfier, vocab, outputFile):
         # if tag_total > 0:
         #     break
         pred_tags = bisent_classfier.classifier(tinst.inputs)
-        for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab):
+        for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab, tokenizer):
             printInstance(output, inst)
             tag_total += 1
             if bmatch: tag_correct += 1
@@ -172,10 +173,7 @@ if __name__ == '__main__':
     config = Configurable(args.config_file, extra_args)
     torch.set_num_threads(args.thread)
     tokenizer = BertTokenHelper(bert_vocab_file='/content/esimmmmmm/bert-base-uncased-vocab.txt')
-    vocab = creatVocab('/content/drive/My Drive/snli/data/snli.train.txt', config.min_occur_count, tokenizer)
-    # vec1 = vocab.load_initialize_embs(config.pretrained_embeddings_file)
-    # vec2 = vocab.load_pretrained_embs(config.pretrained_embeddings_file)
-    # pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
+    vocab, data = creatVocab('/content/drive/My Drive/snli/data/snli.train.txt', config.min_occur_count, tokenizer)
 
     config.use_cuda = False
     gpu_id = -1
@@ -187,14 +185,12 @@ if __name__ == '__main__':
     print("\nGPU using status: ", config.use_cuda)
 
 
-    model = BiLSTMModel(vocab, config)#, vec1)
-    # extword_embed = ExtWord(vocab, config, vec2)
+    model = BiLSTMModel(vocab, config)
     if config.use_cuda:
         torch.backends.cudnn.enabled = False
         model = model.cuda(args.gpu)
-        # extword_embed = extword_embed.cuda(args.gpu)
     classifier = BiSententClassifier(model, vocab)
-    data = read_corpus('/content/drive/My Drive/snli/data/snli.train.txt', tokenizer)
-    dev_data = None#read_corpus(config.dev_file, tokenizer)
-    test_data = None#read_corpus(config.test_file, tokenizer)
+    # data = read_corpus('/content/drive/My Drive/snli/data/snli.train.txt', tokenizer)
+    dev_data = read_corpus('/content/drive/My Drive/snli/data/snli.dev.txt', tokenizer)
+    test_data = read_corpus('/content/drive/My Drive/snli/data/snli.test.txt', tokenizer)
     train(data, dev_data, test_data, classifier, vocab, config, tokenizer)

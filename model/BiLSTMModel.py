@@ -1,21 +1,12 @@
 from module.ESIM import *
 from module.Utils import *
 from module.CPUEmbedding import *
-from transformers import BertModel
 
 class BiLSTMModel(nn.Module):
     def __init__(self, vocab, config):
         super(BiLSTMModel, self).__init__()
         self.config = config
         self.word_dims = 768 // 2
-
-        pretrained_weights = '/Users/tianhongzxy/.cache/torch/transformers/bert-base-uncased'
-        self.bert = BertModel.from_pretrained(pretrained_weights,
-                                          # output_hidden_states=True,
-                                          # output_attentions=True)
-                                         )
-        for p in self.bert.named_parameters():
-            p[1].requires_grad = False
 
         self.rnn_dropout = RNNDropout(p=config.dropout_mlp)
 
@@ -45,26 +36,17 @@ class BiLSTMModel(nn.Module):
                                 nn.Tanh(),
                                 nn.Dropout(p=config.dropout_mlp),
                                 nn.Linear(self.hidden_size, vocab.tag_size))
-
+        # 这步会初始化当前module里所有linear(包括bert的)和lstm，去掉，单独加初始化
         self.apply(_init_esim_weights)
-
+        # self.mlp.apply(_init_esim_weights)
+        # self.lstm_enc.apply(_init_esim_weights)
+        # self.lstm_dec.apply(_init_esim_weights)
+        # self.proj.apply(_init_esim_weights)
     import torchsnooper
     # @torchsnooper.snoop()
-    def forward(self, tinputs):
+    def forward(self, src_embed, tgt_embed, src_lens, tgt_lens, src_masks, tgt_masks):
         ##unpack inputs
-        src_bert_indice, src_segments_id, src_piece_id, src_lens, src_masks, \
-        tgt_bert_indice, tgt_segments_id, tgt_piece_id, tgt_lens, tgt_masks = tinputs
 
-        src_embed, src_attn = self.bert(input_ids=src_bert_indice,
-                        attention_mask=src_masks,
-                        token_type_ids=src_segments_id,
-                        # position_ids=src_piece_id,
-                        )
-        tgt_embed, tgt_attn = self.bert(input_ids=tgt_bert_indice,
-                        attention_mask=tgt_masks,
-                        token_type_ids=tgt_segments_id,
-                        # position_ids=tgt_piece_id,
-                        )
         src_embed = self.rnn_dropout(src_embed)
         tgt_embed = self.rnn_dropout(tgt_embed)
 

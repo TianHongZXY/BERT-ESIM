@@ -46,7 +46,7 @@ def creatVocab(corpusFile, min_occur_count, tokenizer):
         #     word_counter[curword] += 1
         tag_counter[inst.tag] += 1
 
-    return Vocab(word_counter, tag_counter, min_occur_count)
+    return Vocab(word_counter, tag_counter, min_occur_count), alldatas
 
 def insts_numberize(insts, vocab, tokenizer):
     for inst in insts:
@@ -108,7 +108,7 @@ def batch_data_variable(batch, vocab, tokenizer):
         b += 1
     return tinst
 
-def batch_variable_inst(insts, tagids, vocab):
+def batch_variable_inst(insts, tagids, vocab, tokenizer):
     for inst, tagid in zip(insts, tagids):
         pred_tag = vocab.id2tag(tagid)
-        yield Instance(inst.src_words, inst.tgt_words, pred_tag), pred_tag == inst.tag
+        yield Instance(inst.src_words, inst.tgt_words, pred_tag, tokenizer), pred_tag == inst.tag

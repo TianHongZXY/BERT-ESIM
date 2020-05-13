@@ -4,3 +4,4 @@
 snli
 embedding
 venv_esim
+!/snli/default.cfg
