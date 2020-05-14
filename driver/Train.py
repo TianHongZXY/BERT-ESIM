@@ -41,6 +41,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
             bisent_classfier.model.train()
             if bisent_classfier.use_cuda:
                 tinst.to_cuda(bisent_classfier.device)
+                bisent_classfier.bert = bisent_classfier.bert.to(bisent_classfier.device)
             bisent_classfier.forward(tinst.inputs)
             loss = bisent_classfier.compute_loss(tinst.outputs)
             loss = loss / config.update_every
@@ -63,11 +64,9 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                 bisent_classfier.model.zero_grad()       
                 global_step += 1
 
-            # if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
-            # TODO debug跳过eval
-            if True:
-            # if batch_iter % 2 == 0 or batch_iter == batch_num: # debug使用
-            # TODO 5.2看到这
+            if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
+            # TODO debug使用
+            # if True:
                 tag_correct, tag_total, dev_tag_acc = \
                     evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step), tokenizer)
                 print("Dev: acc = %d/%d = %.2f, lr = %.8f" % (tag_correct, tag_total, dev_tag_acc, optimizer.lr))
@@ -184,6 +183,7 @@ if __name__ == '__main__':
 
 
     model = BiLSTMModel(vocab, config)
+    # model.load_state_dict(torch.load('snli/model/model'))
     if config.use_cuda:
         torch.backends.cudnn.enabled = False
         model = model.cuda(args.gpu)

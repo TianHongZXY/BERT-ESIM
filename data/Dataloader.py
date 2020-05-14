@@ -40,11 +40,9 @@ def creatVocab(corpusFile, min_occur_count, tokenizer):
     tag_counter = Counter()
     alldatas = read_corpus(corpusFile, tokenizer)
     for inst in alldatas:
-        # for curword in inst.src_forms:
-        #     word_counter[curword] += 1
-        # for curword in inst.tgt_forms:
-        #     word_counter[curword] += 1
         tag_counter[inst.tag] += 1
+        if len(tag_counter) == 3:
+            break
 
     return Vocab(word_counter, tag_counter, min_occur_count), alldatas
 

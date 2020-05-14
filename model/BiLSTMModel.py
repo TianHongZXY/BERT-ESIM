@@ -38,12 +38,7 @@ class BiLSTMModel(nn.Module):
                                 nn.Linear(self.hidden_size, vocab.tag_size))
         # 这步会初始化当前module里所有linear(包括bert的)和lstm，去掉，单独加初始化
         self.apply(_init_esim_weights)
-        # self.mlp.apply(_init_esim_weights)
-        # self.lstm_enc.apply(_init_esim_weights)
-        # self.lstm_dec.apply(_init_esim_weights)
-        # self.proj.apply(_init_esim_weights)
-    import torchsnooper
-    # @torchsnooper.snoop()
+
     def forward(self, src_embed, tgt_embed, src_lens, tgt_lens, src_masks, tgt_masks):
         ##unpack inputs
 

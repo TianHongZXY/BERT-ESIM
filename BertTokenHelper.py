@@ -3,7 +3,7 @@ from transformers import BertTokenizer
 
 class BertTokenHelper(object):
     def __init__(self, bert_vocab_file):
-        self.tokenizer = BertTokenizer.from_pretrained(bert_vocab_file, do_lower_case=False)
+        self.tokenizer = BertTokenizer.from_pretrained(bert_vocab_file, do_lower_case=True) # 用的uncased，全小写化
         print("Load bert vocabulary finished")
         self.key_words = ("[SEP]", "[UNK]", "[PAD]", "[CLS]", "[MASK]")
 
