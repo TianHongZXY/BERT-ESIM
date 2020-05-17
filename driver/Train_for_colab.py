@@ -102,21 +102,21 @@ def evaluate(data, bisent_classfier, vocab, outputFile, tokenizer):
     bisent_classfier.model.eval()
     output = open(outputFile, 'w', encoding='utf-8')
     tag_correct, tag_total = 0, 0
-
-    for onebatch in data_iter(data, config.test_batch_size, False):
-        tinst = batch_data_variable(onebatch, vocab, tokenizer)
-        if bisent_classfier.use_cuda:
-            tinst.to_cuda(bisent_classfier.device)
-        count = 0
-        # TODO debug使用
-        # if tag_total > 0:
-        #     break
-        pred_tags = bisent_classfier.classifier(tinst.inputs)
-        for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab, tokenizer):
-            printInstance(output, inst)
-            tag_total += 1
-            if bmatch: tag_correct += 1
-            count += 1
+    with torch.no_grad():
+        for onebatch in data_iter(data, config.test_batch_size, False):
+            tinst = batch_data_variable(onebatch, vocab, tokenizer)
+            if bisent_classfier.use_cuda:
+                tinst.to_cuda(bisent_classfier.device)
+            count = 0
+            # TODO debug使用
+            # if tag_total > 0:
+            #     break
+            pred_tags = bisent_classfier.classifier(tinst.inputs)
+            for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab, tokenizer):
+                printInstance(output, inst)
+                tag_total += 1
+                if bmatch: tag_correct += 1
+                count += 1
 
     output.close()
 
