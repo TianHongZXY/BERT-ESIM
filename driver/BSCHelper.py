@@ -1,7 +1,7 @@
 import torch.nn.functional as F
 import torch.nn as nn
 from transformers import BertModel
-
+import torch
 
 class BiSententClassifier(object):
     def __init__(self, model, vocab):
@@ -21,17 +21,30 @@ class BiSententClassifier(object):
     def forward(self, tinputs):
         src_bert_indice, src_segments_id, src_piece_id, src_lens, src_masks, \
         tgt_bert_indice, tgt_segments_id, tgt_piece_id, tgt_lens, tgt_masks = tinputs
+        src_seq_len = src_bert_indice.size(1)
+        pairs_src_tgt_indice = torch.cat((src_bert_indice, tgt_bert_indice[:, 1:-1]), dim=1)
+        tgt_segments_id = torch.ones((tgt_segments_id.size(0), tgt_segments_id.size(1)-2),
+                                     dtype=tgt_segments_id.dtype, device=tgt_segments_id.device)
+        tgt_lens -= 2
+        pairs_segments_id = torch.cat((src_segments_id, tgt_segments_id), dim=1)
+        tgt_masks = tgt_masks[:, 1:-1] # 去掉tgt中的头尾[CLS]和[SEP]
+        pairs_src_tgt_masks = torch.cat((src_masks, tgt_masks), dim=1)
+        pairs_embed, pairs_attn = self.bert(input_ids=pairs_src_tgt_indice,
+                                            attention_mask=pairs_src_tgt_masks,
+                                            token_type_ids=pairs_segments_id)
 
-        src_embed, src_attn = self.bert(input_ids=src_bert_indice,
-                        attention_mask=src_masks,
-                        token_type_ids=src_segments_id,
-                        # position_ids=src_piece_id,
-                        )
-        tgt_embed, tgt_attn = self.bert(input_ids=tgt_bert_indice,
-                        attention_mask=tgt_masks,
-                        token_type_ids=tgt_segments_id,
-                        # position_ids=tgt_piece_id,
-                        )
+        # src_embed, src_attn = self.bert(input_ids=src_bert_indice,
+        #                 attention_mask=src_masks,
+        #                 token_type_ids=src_segments_id,
+        #                 # position_ids=src_piece_id,
+        #                 )
+        # tgt_embed, tgt_attn = self.bert(input_ids=tgt_bert_indice,
+        #                 attention_mask=tgt_masks,
+        #                 token_type_ids=tgt_segments_id,
+        #                 # position_ids=tgt_piece_id,
+        #                 )
+        src_embed = pairs_embed[:, :src_seq_len]
+        tgt_embed = pairs_embed[:, src_seq_len:]
         tag_logits = self.model(src_embed, tgt_embed, src_lens, tgt_lens, src_masks, tgt_masks)
         # cache
         self.tag_logits = tag_logits
