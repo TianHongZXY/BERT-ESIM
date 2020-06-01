@@ -30,7 +30,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
     best_acc = 0
     best_step, optim_step = 0, 0
     batch_num = int(np.ceil(len(data) / float(config.train_batch_size)))
-    opti_file = 'content/drive/My Drive/snli/model/model' + ".opt"
+    opti_file = '/content/drive/My Drive/snli/model/model' + ".opt"
     for iter in range(config.train_iters):
         start_time = time.time()
         print('Iteration: ' + str(iter) + ', total batch num: ' + str(batch_num))
@@ -81,7 +81,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                     best_acc = dev_tag_acc
                     bad_step = 0
                     best_step = global_step
-                    torch.save(bisent_classfier.model.state_dict(), 'content/drive/My Drive/snli/model/model.pth')
+                    torch.save(bisent_classfier.model.state_dict(), '/content/drive/My Drive/snli/model/model.pth')
                 else:
                     bad_step += 1
                     if bad_step == 1:
