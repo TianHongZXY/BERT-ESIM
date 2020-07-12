@@ -15,10 +15,6 @@ class Instance:
         output = ' '.join(self.src_words) + '\n' + ' '.join(self.tgt_words) + '\n' + self.tag + '\n'
         return output
 
-<<<<<<< HEAD
-
-=======
->>>>>>> bert
 
 def parseInstance(texts, tokenizer):
     if len(texts) != 3: return None

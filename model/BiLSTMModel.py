@@ -7,10 +7,7 @@ class BiLSTMModel(nn.Module):
     def __init__(self, vocab, config):
         super(BiLSTMModel, self).__init__()
         self.config = config
-<<<<<<< HEAD
-=======
         self.word_dims = 768 // 2
->>>>>>> bert
 
         self.rnn_dropout = RNNDropout(p=config.dropout_mlp)
 
@@ -43,12 +40,9 @@ class BiLSTMModel(nn.Module):
         # 这步会初始化当前module里所有linear(包括bert的)和lstm，去掉，单独加初始化
         self.apply(_init_esim_weights)
 
-<<<<<<< HEAD
-=======
     def forward(self, src_embed, tgt_embed, src_lens, tgt_lens, src_masks, tgt_masks):
         ##unpack inputs
 
->>>>>>> bert
         src_embed = self.rnn_dropout(src_embed)
         tgt_embed = self.rnn_dropout(tgt_embed)
 

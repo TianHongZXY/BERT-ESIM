@@ -40,9 +40,6 @@ def creatVocab(corpusFile, min_occur_count, tokenizer):
     tag_counter = Counter()
     alldatas = read_corpus(corpusFile, tokenizer)
     for inst in alldatas:
-<<<<<<< HEAD
-=======
->>>>>>> bert
         tag_counter[inst.tag] += 1
         if len(tag_counter) == 3:
             break
@@ -54,12 +51,9 @@ def insts_numberize(insts, vocab, tokenizer):
         yield inst2id(inst, vocab, tokenizer)
 
 def inst2id(inst, vocab, tokenizer):
-<<<<<<< HEAD
-=======
     tagid = vocab.tag2id(inst.tag)
     return (inst.src_bert_indice, inst.src_segments_id, inst.src_piece_id), \
            (inst.tgt_bert_indice, inst.tgt_segments_id, inst.tgt_piece_id), tagid
->>>>>>> bert
 
 
 def batch_slice(data, batch_size):
@@ -87,9 +81,6 @@ def data_iter(data, batch_size, shuffle=True):
 
 # @pysnooper.snoop()
 def batch_data_variable(batch, vocab, tokenizer):
-<<<<<<< HEAD
-=======
->>>>>>> bert
     slen, tlen = batch[0].src_len, batch[0].tgt_len
     batch_size = len(batch)
     for b in range(1, batch_size):
@@ -99,9 +90,6 @@ def batch_data_variable(batch, vocab, tokenizer):
     tinst = TensorInstances(batch_size, slen, tlen)
 
     b = 0
-<<<<<<< HEAD
-=======
->>>>>>> bert
     for (src_bert_indice, src_segments_id, src_piece_id), (tgt_bert_indice, tgt_segments_id, tgt_piece_id), tagid in insts_numberize(batch, vocab, tokenizer):
         tinst.tags[b] = tagid
         cur_slen, cur_tlen = len(src_bert_indice), len(tgt_bert_indice)
@@ -114,9 +102,6 @@ def batch_data_variable(batch, vocab, tokenizer):
         tinst.tgt_bert_indice[b][:cur_tlen] = torch.LongTensor(np.array(tgt_bert_indice)) # 直接 list -> tensor 会内存泄漏
         tinst.src_masks[b][:cur_slen] = 1
         tinst.tgt_masks[b][:cur_tlen] = 1
-<<<<<<< HEAD
-=======
->>>>>>> bert
 
         b += 1
     return tinst

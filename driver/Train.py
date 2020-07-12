@@ -64,12 +64,9 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                 bisent_classfier.model.zero_grad()       
                 global_step += 1
 
-<<<<<<< HEAD
-=======
             if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
             # TODO debug使用
             # if True:
->>>>>>> bert
                 tag_correct, tag_total, dev_tag_acc = \
                     evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step), tokenizer)
                 print("Dev: acc = %d/%d = %.2f, lr = %.8f" % (tag_correct, tag_total, dev_tag_acc, optimizer.lr))
@@ -103,8 +100,6 @@ def evaluate(data, bisent_classfier, vocab, outputFile, tokenizer):
     bisent_classfier.model.eval()
     output = open(outputFile, 'w', encoding='utf-8')
     tag_correct, tag_total = 0, 0
-<<<<<<< HEAD
-=======
     with torch.no_grad():
         for onebatch in data_iter(data, config.test_batch_size, False):
             tinst = batch_data_variable(onebatch, vocab, tokenizer)
@@ -120,7 +115,6 @@ def evaluate(data, bisent_classfier, vocab, outputFile, tokenizer):
                 tag_total += 1
                 if bmatch: tag_correct += 1
                 count += 1
->>>>>>> bert
 
     output.close()
 
@@ -176,10 +170,8 @@ if __name__ == '__main__':
     config = Configurable(args.config_file, extra_args)
     torch.set_num_threads(args.thread)
     tokenizer = BertTokenHelper(bert_vocab_file='bert-base-uncased-vocab.txt')
-<<<<<<< HEAD
-=======
     vocab, data = creatVocab(config.train_file, config.min_occur_count, tokenizer)
->>>>>>> bert
+
 
     config.use_cuda = False
     gpu_id = -1
@@ -191,8 +183,6 @@ if __name__ == '__main__':
     print("\nGPU using status: ", config.use_cuda)
 
 
-<<<<<<< HEAD
-=======
     model = BiLSTMModel(vocab, config)
     # model.load_state_dict(torch.load('snli/model/model'))
     if config.use_cuda:
@@ -202,5 +192,4 @@ if __name__ == '__main__':
     # data = read_corpus(config.train_file, tokenizer)
     dev_data = read_corpus(config.dev_file, tokenizer)
     test_data = read_corpus(config.test_file, tokenizer)
->>>>>>> bert
     train(data, dev_data, test_data, classifier, vocab, config, tokenizer)

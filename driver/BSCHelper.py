@@ -6,9 +6,6 @@ import torch
 class BiSententClassifier(object):
     def __init__(self, model, vocab):
         self.model = model
-<<<<<<< HEAD
-=======
->>>>>>> bert
         p = next(filter(lambda p: p.requires_grad, model.parameters()))
         self.use_cuda = p.is_cuda
         self.device = p.get_device() if self.use_cuda else None
@@ -22,8 +19,6 @@ class BiSententClassifier(object):
         #     p[1].requires_grad = False
 
     def forward(self, tinputs):
-<<<<<<< HEAD
-=======
         src_bert_indice, src_segments_id, src_piece_id, src_lens, src_masks, \
         tgt_bert_indice, tgt_segments_id, tgt_piece_id, tgt_lens, tgt_masks = tinputs
         src_seq_len = src_bert_indice.size(1)
@@ -51,7 +46,6 @@ class BiSententClassifier(object):
         src_embed = pairs_embed[:, :src_seq_len]
         tgt_embed = pairs_embed[:, src_seq_len:]
         tag_logits = self.model(src_embed, tgt_embed, src_lens, tgt_lens, src_masks, tgt_masks)
->>>>>>> bert
         # cache
         self.tag_logits = tag_logits
 

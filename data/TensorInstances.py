@@ -3,9 +3,6 @@ import torch
 
 class TensorInstances:
     def __init__(self, batch_size, slen, tlen):
-<<<<<<< HEAD
-=======
->>>>>>> bert
         self.tags = torch.zeros(size=(batch_size, ), requires_grad=False, dtype=torch.long)
 
         self.src_masks = torch.zeros(size=(batch_size, slen), requires_grad=False, dtype=torch.long)
@@ -21,11 +18,9 @@ class TensorInstances:
         self.tgt_piece_id = torch.arange(start=0, end=tlen, requires_grad=False, dtype=torch.long)
 
     def to_cuda(self, device):
-<<<<<<< HEAD
-=======
+
         self.src_lens = self.src_lens.cuda(device)
         self.src_masks = self.src_masks.cuda(device)
->>>>>>> bert
         self.tgt_lens = self.tgt_lens.cuda(device)
         self.tgt_masks = self.tgt_masks.cuda(device)
         self.tags = self.tags.cuda(device)
@@ -40,9 +35,6 @@ class TensorInstances:
 
     @property
     def inputs(self):
-<<<<<<< HEAD
-=======
->>>>>>> bert
         return (self.src_bert_indice, self.src_segments_id, self.src_piece_id, self.src_lens, self.src_masks,\
                 self.tgt_bert_indice, self.tgt_segments_id, self.tgt_piece_id, self.tgt_lens, self.tgt_masks)
     @property
