@@ -15,8 +15,8 @@ class BiSententClassifier(object):
                                           # output_hidden_states=True,
                                           # output_attentions=True)
                                          )
-        for p in self.bert.named_parameters():
-            p[1].requires_grad = False
+        # for p in self.bert.named_parameters():
+        #     p[1].requires_grad = False
 
     def forward(self, tinputs):
         src_bert_indice, src_segments_id, src_piece_id, src_lens, src_masks, \

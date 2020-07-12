@@ -18,10 +18,12 @@ from driver.BSCHelper import *
 from data.Dataloader import *
 import pickle
 from BertTokenHelper import BertTokenHelper
-
+import torch.optim as optim
 
 def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer):
     optimizer = Optimizer(filter(lambda p: p.requires_grad, bisent_classfier.model.parameters()), config)
+    bert_optimizer = optim.Adam(bisent_classfier.bert.parameters(), lr=5e-5, betas=(config.beta_1, config.beta_2),
+                                  eps=config.epsilon)
 
     decay, max_patience = config.decay, config.decay_steps
     current_lr, min_lr = optimizer.lr, 1e-5
@@ -63,7 +65,9 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                 nn.utils.clip_grad_norm_(filter(lambda p: p.requires_grad, bisent_classfier.model.parameters()), \
                                         max_norm=config.clip)
                 optimizer.step()
-                bisent_classfier.model.zero_grad()       
+                bert_optimizer.step()
+                bisent_classfier.model.zero_grad()
+                bisent_classfier.bert.zero_grad()
                 global_step += 1
 
             if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
