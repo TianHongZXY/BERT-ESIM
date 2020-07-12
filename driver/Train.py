@@ -41,6 +41,7 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
             bisent_classfier.model.train()
             if bisent_classfier.use_cuda:
                 tinst.to_cuda(bisent_classfier.device)
+                bisent_classfier.bert = bisent_classfier.bert.to(bisent_classfier.device)
             bisent_classfier.forward(tinst.inputs)
             loss = bisent_classfier.compute_loss(tinst.outputs)
             loss = loss / config.update_every
@@ -63,17 +64,18 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                 bisent_classfier.model.zero_grad()       
                 global_step += 1
 
-            # if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
-            # TODO debug跳过eval
-            if False:
-            # if batch_iter % 2 == 0 or batch_iter == batch_num: # debug使用
-            # TODO 5.2看到这
+<<<<<<< HEAD
+=======
+            if batch_iter % config.validate_every == 0 or batch_iter == batch_num:
+            # TODO debug使用
+            # if True:
+>>>>>>> bert
                 tag_correct, tag_total, dev_tag_acc = \
-                    evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step))
+                    evaluate(dev_data, classifier, vocab, config.dev_file + '.' + str(global_step), tokenizer)
                 print("Dev: acc = %d/%d = %.2f, lr = %.8f" % (tag_correct, tag_total, dev_tag_acc, optimizer.lr))
 
                 tag_correct, tag_total, test_tag_acc = \
-                     evaluate(test_data, classifier, vocab, config.test_file + '.' + str(global_step))
+                     evaluate(test_data, classifier, vocab, config.test_file + '.' + str(global_step), tokenizer)
                 print("Test: acc = %d/%d = %.2f" % (tag_correct, tag_total, test_tag_acc))
                 if dev_tag_acc > best_acc:
                     print("Exceed best acc: history = %.2f, current = %.2f" %(best_acc, dev_tag_acc))
@@ -96,26 +98,29 @@ def train(data, dev_data, test_data, bisent_classfier, vocab, config, tokenizer)
                         print("Loading best model at step: %d, optim step at %d." % (best_step, optim_step))
 
 
-def evaluate(data, bisent_classfier, vocab, outputFile):
+def evaluate(data, bisent_classfier, vocab, outputFile, tokenizer):
     start = time.time()
     bisent_classfier.model.eval()
     output = open(outputFile, 'w', encoding='utf-8')
     tag_correct, tag_total = 0, 0
-
-    for onebatch in data_iter(data, config.test_batch_size, False):
-        tinst = batch_data_variable(onebatch, vocab)
-        if bisent_classfier.use_cuda:
-            tinst.to_cuda(bisent_classfier.device)
-        count = 0
-        # TODO debug使用
-        # if tag_total > 0:
-        #     break
-        pred_tags = bisent_classfier.classifier(tinst.inputs)
-        for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab):
-            printInstance(output, inst)
-            tag_total += 1
-            if bmatch: tag_correct += 1
-            count += 1
+<<<<<<< HEAD
+=======
+    with torch.no_grad():
+        for onebatch in data_iter(data, config.test_batch_size, False):
+            tinst = batch_data_variable(onebatch, vocab, tokenizer)
+            if bisent_classfier.use_cuda:
+                tinst.to_cuda(bisent_classfier.device)
+            count = 0
+            # TODO debug使用
+            # if tag_total > 0:
+            #     break
+            pred_tags = bisent_classfier.classifier(tinst.inputs)
+            for inst, bmatch in batch_variable_inst(onebatch, pred_tags, vocab, tokenizer):
+                printInstance(output, inst)
+                tag_total += 1
+                if bmatch: tag_correct += 1
+                count += 1
+>>>>>>> bert
 
     output.close()
 
@@ -171,10 +176,10 @@ if __name__ == '__main__':
     config = Configurable(args.config_file, extra_args)
     torch.set_num_threads(args.thread)
     tokenizer = BertTokenHelper(bert_vocab_file='bert-base-uncased-vocab.txt')
-    vocab = creatVocab(config.train_file, config.min_occur_count, tokenizer)
-    # vec1 = vocab.load_initialize_embs(config.pretrained_embeddings_file)
-    # vec2 = vocab.load_pretrained_embs(config.pretrained_embeddings_file)
-    # pickle.dump(vocab, open(config.save_vocab_path, 'wb'))
+<<<<<<< HEAD
+=======
+    vocab, data = creatVocab(config.train_file, config.min_occur_count, tokenizer)
+>>>>>>> bert
 
     config.use_cuda = False
     gpu_id = -1
@@ -186,14 +191,16 @@ if __name__ == '__main__':
     print("\nGPU using status: ", config.use_cuda)
 
 
-    model = BiLSTMModel(vocab, config)#, vec1)
-    # extword_embed = ExtWord(vocab, config, vec2)
+<<<<<<< HEAD
+=======
+    model = BiLSTMModel(vocab, config)
+    # model.load_state_dict(torch.load('snli/model/model'))
     if config.use_cuda:
         torch.backends.cudnn.enabled = False
         model = model.cuda(args.gpu)
-        # extword_embed = extword_embed.cuda(args.gpu)
     classifier = BiSententClassifier(model, vocab)
-    data = read_corpus(config.train_file, tokenizer)
-    dev_data = None#read_corpus(config.dev_file, tokenizer)
-    test_data = None#read_corpus(config.test_file, tokenizer)
+    # data = read_corpus(config.train_file, tokenizer)
+    dev_data = read_corpus(config.dev_file, tokenizer)
+    test_data = read_corpus(config.test_file, tokenizer)
+>>>>>>> bert
     train(data, dev_data, test_data, classifier, vocab, config, tokenizer)
